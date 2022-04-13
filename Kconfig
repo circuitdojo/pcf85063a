@@ -1,0 +1,7 @@
+#
+# Copyright (c) 2020 Circuit Dojo
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+rsource "drivers/rtc/Kconfig"
