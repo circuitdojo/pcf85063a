@@ -4,4 +4,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-include_directories(drivers/rtc)
+zephyr_include_directories(include)
+
+add_subdirectory(drivers/rtc)

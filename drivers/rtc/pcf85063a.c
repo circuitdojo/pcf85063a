@@ -18,20 +18,115 @@
 #include <drivers/i2c.h>
 #include <drivers/counter.h>
 
-#include "pcf85063a.h"
+#include <sys/timeutil.h>
+
+#include <drivers/rtc/pcf85063a.h>
 
 #include <logging/log.h>
-LOG_MODULE_REGISTER(rtc);
+LOG_MODULE_REGISTER(pcf85063a);
 
 #define DT_DRV_COMPAT nxp_pcf85063a
 
-static const struct device *pcf85063a_dev;
+int pcf85063a_set_time(const struct device *dev, const struct tm *time)
+{
+
+	int ret = 0;
+
+	// Get the data pointer
+	struct pcf85063a_data *data = dev->data;
+
+	/* Set seconds */
+	uint8_t raw_time[7] = {0};
+	raw_time[0] = PCF85063A_SECONDS_MASK & (((time->tm_sec / 10) << PCF85063A_BCD_UPPER_SHIFT) + (time->tm_sec % 10));
+
+	/* Set minutes */
+	raw_time[1] = PCF85063A_MINUTES_MASK & (((time->tm_min / 10) << PCF85063A_BCD_UPPER_SHIFT) + (time->tm_min % 10));
+
+	/* Set hours */
+	raw_time[2] = PCF85063A_HOURS_MASK & (((time->tm_hour / 10) << PCF85063A_BCD_UPPER_SHIFT) + (time->tm_hour % 10));
+
+	/* Set days */
+	raw_time[3] = PCF85063A_DAYS_MASK & (((time->tm_mday / 10) << PCF85063A_BCD_UPPER_SHIFT) + (time->tm_mday % 10));
+
+	/* Set weekdays */
+	raw_time[4] = PCF85063A_WEEKDAYS_MASK & time->tm_wday;
+
+	/*Set month */
+	raw_time[5] = PCF85063A_MONTHS_MASK & (((time->tm_mon / 10) << PCF85063A_BCD_UPPER_SHIFT) + (time->tm_mon % 10));
+
+	/* Set year */
+	uint8_t year = time->tm_year % 100;
+	raw_time[6] = ((year / 10) << PCF85063A_BCD_UPPER_SHIFT) + (year % 10);
+
+	/* Write to device */
+	ret = i2c_burst_write(data->i2c,
+						  DT_REG_ADDR(DT_DRV_INST(0)),
+						  PCF85063A_SECONDS,
+						  raw_time,
+						  sizeof(raw_time));
+	if (ret)
+	{
+		LOG_ERR("Unable to set time. Err: %i", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
+int pcf85063a_get_time(const struct device *dev, struct tm *time)
+{
+	int ret = 0;
+	uint8_t raw_time[7] = {0};
+
+	// Get the data pointer
+	struct pcf85063a_data *data = dev->data;
+
+	ret = i2c_burst_read(data->i2c,
+						 DT_REG_ADDR(DT_DRV_INST(0)),
+						 PCF85063A_SECONDS,
+						 raw_time,
+						 sizeof(raw_time));
+	if (ret)
+	{
+		LOG_ERR("Unable to get time. Err: %i", ret);
+		return ret;
+	}
+
+	/* Get seconds */
+	time->tm_sec = (raw_time[0] & PCF85063A_BCD_LOWER_MASK) + (((raw_time[0] & PCF85063A_BCD_UPPER_MASK_SEC) >> PCF85063A_BCD_UPPER_SHIFT) * 10);
+
+	/* Get minutes */
+	time->tm_min = (raw_time[1] & PCF85063A_BCD_LOWER_MASK) + (((raw_time[1] & PCF85063A_BCD_UPPER_MASK) >> PCF85063A_BCD_UPPER_SHIFT) * 10);
+
+	/* Get hours */
+	time->tm_hour = (raw_time[2] & PCF85063A_BCD_LOWER_MASK) + (((raw_time[2] & PCF85063A_BCD_UPPER_MASK) >> PCF85063A_BCD_UPPER_SHIFT) * 10);
+
+	/* Get days */
+	time->tm_mday = (raw_time[3] & PCF85063A_BCD_LOWER_MASK) + (((raw_time[3] & PCF85063A_BCD_UPPER_MASK) >> PCF85063A_BCD_UPPER_SHIFT) * 10);
+
+	/* Get weekdays */
+	time->tm_wday = (raw_time[4] & PCF85063A_BCD_LOWER_MASK) + (((raw_time[4] & PCF85063A_BCD_UPPER_MASK) >> PCF85063A_BCD_UPPER_SHIFT) * 10);
+
+	/* TODO: Get day number in year (?) */
+	time->tm_yday = 0;
+
+	/* Get month */
+	time->tm_mon = (raw_time[5] & PCF85063A_BCD_LOWER_MASK) + (((raw_time[5] & PCF85063A_BCD_UPPER_MASK) >> PCF85063A_BCD_UPPER_SHIFT) * 10);
+
+	/* Get year */
+	time->tm_year = (raw_time[6] & PCF85063A_BCD_LOWER_MASK) + (((raw_time[6] & PCF85063A_BCD_UPPER_MASK) >> PCF85063A_BCD_UPPER_SHIFT) * 10);
+
+	/* DST not used  */
+	time->tm_isdst = 0;
+
+	return 0;
+}
 
 static int pcf85063a_start(const struct device *dev)
 {
 
 	// Get the data pointer
-	struct pcf85063a_data *data = pcf85063a_dev->data;
+	struct pcf85063a_data *data = dev->data;
 
 	// Turn it back on (active low)
 	uint8_t reg = 0;
@@ -53,7 +148,7 @@ static int pcf85063a_stop(const struct device *dev)
 {
 
 	// Get the data pointer
-	struct pcf85063a_data *data = pcf85063a_dev->data;
+	struct pcf85063a_data *data = dev->data;
 
 	// Turn it off
 	uint8_t reg = PCF85063A_CTRL1_STOP;
@@ -84,7 +179,7 @@ static int pcf85063a_set_alarm(
 	uint8_t ticks = (uint8_t)alarm_cfg->ticks;
 
 	// Get the data pointer
-	struct pcf85063a_data *data = pcf85063a_dev->data;
+	struct pcf85063a_data *data = dev->data;
 
 	// Ret val for error checking
 	int ret;
@@ -132,7 +227,7 @@ static int pcf85063a_cancel_alarm(const struct device *dev, uint8_t chan_id)
 {
 
 	// Get the data pointer
-	struct pcf85063a_data *data = pcf85063a_dev->data;
+	struct pcf85063a_data *data = dev->data;
 
 	// Ret val for error checking
 	int ret;
@@ -176,7 +271,7 @@ static uint32_t pcf85063a_get_pending_int(const struct device *dev)
 {
 
 	// Get the data pointer
-	struct pcf85063a_data *data = pcf85063a_dev->data;
+	struct pcf85063a_data *data = dev->data;
 
 	// Start with 0
 	uint8_t reg = 0;
@@ -210,14 +305,11 @@ static const struct counter_driver_api pcf85063a_api = {
 	.get_top_value = pcf85063a_get_top_value,
 };
 
-// ARG_UNUSED(dev);
-
 int pcf85063a_init(const struct device *dev)
 {
-	pcf85063a_dev = dev;
 
 	/* Get the i2c device binding*/
-	struct pcf85063a_data *data = pcf85063a_dev->data;
+	struct pcf85063a_data *data = dev->data;
 	data->i2c = device_get_binding(DT_BUS_LABEL(DT_DRV_INST(0)));
 
 	// Set I2C Device.
@@ -238,7 +330,7 @@ int pcf85063a_init(const struct device *dev)
 		return -EIO;
 	}
 
-	LOG_INF("%s is initialized!", pcf85063a_dev->name);
+	LOG_INF("%s is initialized!", dev->name);
 
 	return 0;
 }

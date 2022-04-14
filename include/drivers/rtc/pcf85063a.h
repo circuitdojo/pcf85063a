@@ -8,6 +8,14 @@
 #ifndef ZEPHYR_DRIVERS_RTC_PCF85063A_PCF85063A_H_
 #define ZEPHYR_DRIVERS_RTC_PCF85063A_PCF85063A_H_
 
+#include <zephyr.h>
+#include <time.h>
+
+#define PCF85063A_BCD_UPPER_SHIFT 4
+#define PCF85063A_BCD_LOWER_MASK 0x0f
+#define PCF85063A_BCD_UPPER_MASK 0xf0
+#define PCF85063A_BCD_UPPER_MASK_SEC 0x70
+
 #define PCF85063A_CTRL1 0x00
 #define PCF85063A_CTRL1_EXT_TEST BIT(7)
 #define PCF85063A_CTRL1_STOP BIT(5)
@@ -40,15 +48,20 @@
 /* Time related */
 #define PCF85063A_SECONDS 0x04
 #define PCF85063A_SECONDS_OS BIT(7)
+#define PCF85063A_SECONDS_MASK 0x7f
 
 #define PCF85063A_MINUTES 0x05
+#define PCF85063A_MINUTES_MASK 0x7f
 
 #define PCF85063A_HOURS 0x06
 #define PCF85063A_HOURS_AM_PM BIT(5)
+#define PCF85063A_HOURS_MASK 0x3f
 
 #define PCF85063A_DAYS 0x07
+#define PCF85063A_DAYS_MASK 0x3f
 
 #define PCF85063A_WEEKDAYS 0x08
+#define PCF85063A_WEEKDAYS_MASK 0x7
 #define PCF85063A_WEEKDAYS_SUN 0x0
 #define PCF85063A_WEEKDAYS_MON 0x1
 #define PCF85063A_WEEKDAYS_TUE 0x2
@@ -58,6 +71,7 @@
 #define PCF85063A_WEEKDAYS_SAT 0x6
 
 #define PCF85063A_MONTHS 0x09
+#define PCF85063A_MONTHS_MASK 0x1f
 #define PCF85063A_MONTHS_JAN 0x1
 #define PCF85063A_MONTHS_FEB 0x2
 #define PCF85063A_MONTHS_MAR 0x3
@@ -103,17 +117,6 @@
 #define PCF85063A_TIMER_MODE_INT_EN BIT(1)
 #define PCF85063A_TIMER_MODE_INT_TI_TP BIT(0)
 
-struct pcf85063a_time
-{
-	uint16_t year;
-	uint8_t month;
-	uint8_t day;
-	bool am_pm;
-	uint8_t hour;
-	uint8_t minute;
-	uint8_t second;
-};
-
 struct pcf85063a_data
 {
 	const struct device *dev;
@@ -121,10 +124,16 @@ struct pcf85063a_data
 };
 
 int pcf85063a_init(const struct device *dev);
-int pcf85063a_osc_en(bool enabled);
-int pcf85063a_set_time(struct pcf85063a_time *time);
-int pcf85063a_get_time(struct pcf85063a_time *time);
-int pcf85063a_set_timer(uint8_t seconds);
-int pcf85063a_timer_en(bool enabled);
+
+/*
+ * Future
+ *
+ * int pcf85063a_osc_en(bool enabled);
+ * int pcf85063a_set_timer(uint8_t seconds);
+ * int pcf85063a_timer_en(bool enabled);
+ */
+
+int pcf85063a_set_time(const struct device *dev, const struct tm *time);
+int pcf85063a_get_time(const struct device *dev, struct tm *time);
 
 #endif /* ZEPHYR_DRIVERS_RTC_PCF85063A_PCF85063A_H_ */
