@@ -25,6 +25,25 @@ Add this entry to your .conf
 CONFIG_PCF85063A=y
 ```
 
+### Overlay
+
+Here is an example of defining the PCF85063A in your .overlay
+
+```
+&i2c1 {
+	compatible = "nordic,nrf-twim";
+	status = "okay";
+	sda-pin = <26>;
+	scl-pin = <27>;
+
+	pcf85063a@51 {
+		compatible = "nxp,pcf85063a";
+		label = "PCF85063A";
+		reg = <0x51>;
+	};
+};
+```
+
 ### Import
 
 For time set/get you will need to include:
