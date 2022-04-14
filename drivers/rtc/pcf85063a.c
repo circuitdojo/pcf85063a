@@ -27,6 +27,28 @@ LOG_MODULE_REGISTER(pcf85063a);
 
 #define DT_DRV_COMPAT nxp_pcf85063a
 
+/*
+ * Function from https://stackoverflow.com/questions/19377396/c-get-day-of-year-from-date
+ */
+static int yisleap(int year)
+{
+	return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+}
+
+/*
+ * Function from https://stackoverflow.com/questions/19377396/c-get-day-of-year-from-date
+ */
+static int get_yday(int mon, int day, int year)
+{
+	static const int days[2][12] = {
+		{0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334},
+		{0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335}};
+	int leap = yisleap(year);
+
+	/* Minus 1 since gmtime starts from 0 */
+	return days[leap][mon] + day - 1;
+}
+
 int pcf85063a_set_time(const struct device *dev, const struct tm *time)
 {
 
@@ -107,14 +129,14 @@ int pcf85063a_get_time(const struct device *dev, struct tm *time)
 	/* Get weekdays */
 	time->tm_wday = (raw_time[4] & PCF85063A_BCD_LOWER_MASK) + (((raw_time[4] & PCF85063A_BCD_UPPER_MASK) >> PCF85063A_BCD_UPPER_SHIFT) * 10);
 
-	/* TODO: Get day number in year (?) */
-	time->tm_yday = 0;
-
 	/* Get month */
 	time->tm_mon = (raw_time[5] & PCF85063A_BCD_LOWER_MASK) + (((raw_time[5] & PCF85063A_BCD_UPPER_MASK) >> PCF85063A_BCD_UPPER_SHIFT) * 10);
 
-	/* Get year */
-	time->tm_year = (raw_time[6] & PCF85063A_BCD_LOWER_MASK) + (((raw_time[6] & PCF85063A_BCD_UPPER_MASK) >> PCF85063A_BCD_UPPER_SHIFT) * 10);
+	/* Get year with offset of 100 since we're in 2000+ */
+	time->tm_year = (raw_time[6] & PCF85063A_BCD_LOWER_MASK) + (((raw_time[6] & PCF85063A_BCD_UPPER_MASK) >> PCF85063A_BCD_UPPER_SHIFT) * 10) + 100;
+
+	/* Get day number in year */
+	time->tm_yday = get_yday(time->tm_mon, time->tm_mday, time->tm_year + 1900);
 
 	/* DST not used  */
 	time->tm_isdst = 0;
