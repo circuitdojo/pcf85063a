@@ -2,7 +2,7 @@
 
 ## Usage
 
-Add to your manifest:
+Add to your `west.yml` manifest:
 
 ```
 manifest:
@@ -15,6 +15,8 @@ manifest:
 ```
 
 This will import the driver and allow you to use it in your code.
+
+Additionally make sure that you run `west update` when you've added this entry to your `west.yml`.
 
 ### Configuration
 
