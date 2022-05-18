@@ -114,6 +114,13 @@ int pcf85063a_get_time(const struct device *dev, struct tm *time)
 		return ret;
 	}
 
+	/* Make sure the time is set properly.. */
+	if (raw_time[0] & PCF85063A_SECONDS_OS)
+	{
+		LOG_WRN("Clock integrity error.");
+		return -EIO;
+	}
+
 	/* Get seconds */
 	time->tm_sec = (raw_time[0] & PCF85063A_BCD_LOWER_MASK) + (((raw_time[0] & PCF85063A_BCD_UPPER_MASK_SEC) >> PCF85063A_BCD_UPPER_SHIFT) * 10);
 
