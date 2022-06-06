@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Circuit Dojo LLC
+ * Copyright (c) 2022 Circuit Dojo LLC
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -341,7 +341,7 @@ int pcf85063a_init(const struct device *dev)
 	struct pcf85063a_data *data = dev->data;
 	data->i2c = device_get_binding(DT_BUS_LABEL(DT_DRV_INST(0)));
 
-	// Set I2C Device.
+	/* Set I2C Device. */
 	if (data->i2c == NULL)
 	{
 		LOG_ERR("Failed to get pointer to %s device!",
@@ -349,7 +349,7 @@ int pcf85063a_init(const struct device *dev)
 		return -EINVAL;
 	}
 
-	// Check if it's alive.
+	/* Check if it's alive. */
 	uint8_t reg;
 	int ret = i2c_reg_read_byte(data->i2c, DT_REG_ADDR(DT_DRV_INST(0)),
 								PCF85063A_CTRL1, &reg);
