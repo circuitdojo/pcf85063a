@@ -4,25 +4,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/init.h>
-#include <zephyr/kernel.h>
-#include <zephyr/sys/byteorder.h>
-#include <zephyr/sys/__assert.h>
-#include <zephyr/sys/util.h>
+#include <init.h>
+#include <kernel.h>
+#include <sys/byteorder.h>
+#include <sys/__assert.h>
+#include <sys/util.h>
 
 #include <stdint.h>
 #include <string.h>
 
-#include <zephyr/device.h>
-#include <zephyr/drivers/gpio.h>
-#include <zephyr/drivers/i2c.h>
-#include <zephyr/drivers/counter.h>
+#include <device.h>
+#include <drivers/gpio.h>
+#include <drivers/i2c.h>
+#include <drivers/counter.h>
 
-#include <zephyr/sys/timeutil.h>
+#include <sys/timeutil.h>
 
 #include <drivers/counter/pcf85063a.h>
 
-#include <zephyr/logging/log.h>
+#include <logging/log.h>
 LOG_MODULE_REGISTER(pcf85063a);
 
 #define DT_DRV_COMPAT nxp_pcf85063a
@@ -82,8 +82,8 @@ int pcf85063a_set_time(const struct device *dev, const struct tm *time)
 
 	/* Write to device */
 	ret = i2c_burst_write_dt(&data->i2c, PCF85063A_SECONDS,
-						  raw_time,
-						  sizeof(raw_time));
+							 raw_time,
+							 sizeof(raw_time));
 	if (ret)
 	{
 		LOG_ERR("Unable to set time. Err: %i", ret);
@@ -102,8 +102,8 @@ int pcf85063a_get_time(const struct device *dev, struct tm *time)
 	struct pcf85063a_data *data = dev->data;
 
 	ret = i2c_burst_read_dt(&data->i2c, PCF85063A_SECONDS,
-						 raw_time,
-						 sizeof(raw_time));
+							raw_time,
+							sizeof(raw_time));
 	if (ret)
 	{
 		LOG_ERR("Unable to get time. Err: %i", ret);
@@ -349,16 +349,16 @@ int pcf85063a_init(const struct device *dev)
 }
 
 /* Main instantiation matcro */
-#define PCF85063A_DEFINE(inst)							\
-	static struct pcf85063a_data pcf85063a_data_##inst = {			\
-		.i2c = I2C_DT_SPEC_INST_GET(inst),				\
-	};									\
-	static const struct counter_config_info pcf85063_cfg_info_##inst = {	\
-		.max_top_value = 0xff,						\
-		.freq = 1,							\
-		.channels = 1,							\
-	};									\
-	DEVICE_DT_INST_DEFINE(inst,						\
+#define PCF85063A_DEFINE(inst)                                               \
+	static struct pcf85063a_data pcf85063a_data_##inst = {                   \
+		.i2c = I2C_DT_SPEC_INST_GET(inst),                                   \
+	};                                                                       \
+	static const struct counter_config_info pcf85063_cfg_info_##inst = {     \
+		.max_top_value = 0xff,                                               \
+		.freq = 1,                                                           \
+		.channels = 1,                                                       \
+	};                                                                       \
+	DEVICE_DT_INST_DEFINE(inst,                                              \
 						  pcf85063a_init, NULL,                              \
 						  &pcf85063a_data_##inst, &pcf85063_cfg_info_##inst, \
 						  POST_KERNEL, CONFIG_I2C_INIT_PRIORITY,             \

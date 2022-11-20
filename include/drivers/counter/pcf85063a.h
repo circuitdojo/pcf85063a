@@ -8,8 +8,8 @@
 #ifndef ZEPHYR_DRIVERS_RTC_PCF85063A_PCF85063A_H_
 #define ZEPHYR_DRIVERS_RTC_PCF85063A_PCF85063A_H_
 
-#include <zephyr/kernel.h>
-#include <zephyr/drivers/i2c.h>
+#include <kernel.h>
+#include <drivers/i2c.h>
 #include <time.h>
 
 #define PCF85063A_BCD_UPPER_SHIFT 4
