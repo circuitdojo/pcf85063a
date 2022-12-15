@@ -49,6 +49,69 @@ static int get_yday(int mon, int day, int year)
 	return days[leap][mon] + day - 1;
 }
 
+int pcf85063a_set_offset_mode(const struct device *dev, uint8_t offset_mode_value)
+{
+	// Sets offset mode via bit 7 of Offset Register
+	// Bit 7 = 0: Normal mode - offset made every 2 hours
+	// Bit 7 = 1: Course mode - offset made every 4 minutes
+	
+	// Get the data pointer
+	struct pcf85063a_data *data = dev->data;
+
+	uint8_t mask = PCF85063A_OFFSET_MODE;
+
+	// Write back the updated register value
+	int ret = i2c_reg_update_byte_dt(&data->i2c, PCF85063A_OFFSET, mask, offset_mode_value);
+	if (ret)
+	{
+		LOG_ERR("Unable to set offset mode value. (err %i)", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
+int pcf85063a_set_offset_value(const struct device *dev, uint8_t offset_value)
+{
+	// Sets offset value to enable correction for drift
+	// OFFSET[6:0] is 2's compliment of required offset value
+		
+	// Get the data pointer
+	struct pcf85063a_data *data = dev->data;
+
+	uint8_t mask = PCF85063A_OFFSET_VALUE_MASK;
+
+	// Write back the updated register value
+	int ret = i2c_reg_update_byte_dt(&data->i2c, PCF85063A_OFFSET, mask, offset_value);
+	if (ret)
+	{
+		LOG_ERR("Unable to set offset value. (err %i)", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
+int pcf85063a_set_cap_sel(const struct device *dev, uint8_t cap_value)
+{
+
+	// Get the data pointer
+	struct pcf85063a_data *data = dev->data;
+
+	uint8_t mask = PCF85063A_CTRL1_CAP_SEL;
+
+	// Write back the updated register value
+	int ret = i2c_reg_update_byte_dt(&data->i2c, PCF85063A_CTRL1, mask, cap_value);
+
+	if (ret)
+	{
+		LOG_ERR("Unable to set capacitor value. (err %i)", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
 int pcf85063a_set_time(const struct device *dev, const struct tm *time)
 {
 
