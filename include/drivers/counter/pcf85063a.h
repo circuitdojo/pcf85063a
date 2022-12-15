@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2022 Circuit Dojo LLC
  *
@@ -42,7 +41,13 @@
 #define PCF85063A_CTRL2_COF_1 0x6
 #define PCF85063A_CTRL2_COF_LOW 0x7
 
+/* Offset register related */
 #define PCF85063A_OFFSET 0x02
+#define PCF85063A_OFFSET_MODE BIT(7)
+#define PCF85063A_OFFSET_VALUE_MASK 0x7f
+#define PCF85063A_OFFSET_MODE_NORMAL 0
+#define PCF85063A_OFFSET_MODE_COURSE 1
+
 #define PCF85063A_RAM_BYTE 0x03
 #define PCF85063A_TENS_SHIFT 4
 
@@ -118,6 +123,10 @@
 #define PCF85063A_TIMER_MODE_INT_EN BIT(1)
 #define PCF85063A_TIMER_MODE_INT_TI_TP BIT(0)
 
+/* Capacitor values */
+#define PCF85063A_CAP_VALUE_7PF	0
+#define PCF85063A_CAP_VALUE_12_5PF	1
+
 struct pcf85063a_data
 {
 	const struct i2c_dt_spec i2c;
@@ -133,6 +142,9 @@ int pcf85063a_init(const struct device *dev);
  * int pcf85063a_timer_en(bool enabled);
  */
 
+int pcf85063a_set_cap_sel(const struct device *dev, uint8_t cap_value);
+int pcf85063a_set_offset_mode(const struct device *dev, uint8_t offset_mode_value);
+int pcf85063a_set_offset_value(const struct device *dev, uint8_t offset_value);
 int pcf85063a_set_time(const struct device *dev, const struct tm *time);
 int pcf85063a_get_time(const struct device *dev, struct tm *time);
 
