@@ -361,7 +361,7 @@ int pcf85063a_init(const struct device *dev)
 	DEVICE_DT_INST_DEFINE(inst,						\
 						  pcf85063a_init, NULL,                              \
 						  &pcf85063a_data_##inst, &pcf85063_cfg_info_##inst, \
-						  POST_KERNEL, CONFIG_I2C_INIT_PRIORITY,             \
+						  POST_KERNEL, CONFIG_APPLICATION_INIT_PRIORITY,             \
 						  &pcf85063a_api);
 
 /* Create the struct device for every status "okay"*/
