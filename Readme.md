@@ -9,8 +9,8 @@ manifest:
   projects:
     # RTC Driver
     - name: pcf85063a
-      url: https://github.com/circuitdojo/pcf85063a
-      revision: master
+      url: https://github.com/maustin-redant/pcf85063a
+      revision: add_offset_value
       path: pcf85063a
 ```
 
@@ -51,5 +51,5 @@ Here is an example of defining the PCF85063A in your .overlay
 For time set/get you will need to include:
 
 ```
-#include <drivers/rtc/pcf85063a.h>
+#include <drivers/counter/pcf85063a.h>
 ```
