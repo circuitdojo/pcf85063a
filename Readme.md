@@ -1,4 +1,4 @@
-# PCF85063A Zephyr RTC Driver 
+# PCF85063A Zephyr RTC Driver
 
 ## Usage
 
@@ -57,13 +57,18 @@ For time set/get you will need to include:
 ```
 ### Import
 
-You can get the device bindings by name, for example:
+You can get the device by it's node label, for example:
 
 ```c
-const struct device *rtc;
+#define RTC DEVICE_DT_GET(DT_NODELABEL(pcf85063a))
+
+const struct device *const rtc = RTC;
 
 static void rtc_init() {
-  rtc = device_get_binding("pcf85063a@51");
+  /* Check device readiness */
+  if (!device_is_ready(rtc)) {
+    LOG_ERR("pcf85063a isn't ready!");
+  }
   ...
 };
 ```
