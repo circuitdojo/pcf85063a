@@ -1,0 +1,18 @@
+#
+# Copyright (c) 2022 Circuit Dojo LLC
+# SPDX-License-Identifier: Apache-2.0
+#
+
+description: NXP PCF85063A Real Time Clock
+
+compatible: "nxp,pcf85063a"
+
+include:
+  - name: rtc-device.yaml
+  - name: i2c-device.yaml
+
+properties:
+  int1-gpios:
+    type: phandle-array
+    description: |
+      GPIO connected to the PC85063A INT1 interrupt output. This signal is open-drain, active low.

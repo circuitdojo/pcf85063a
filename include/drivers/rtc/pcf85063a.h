@@ -8,8 +8,7 @@
 #ifndef ZEPHYR_DRIVERS_RTC_PCF85063A_PCF85063A_H_
 #define ZEPHYR_DRIVERS_RTC_PCF85063A_PCF85063A_H_
 
-#include <zephyr.h>
-#include <time.h>
+#include <zephyr/kernel.h>
 
 #define PCF85063A_BCD_UPPER_SHIFT 4
 #define PCF85063A_BCD_LOWER_MASK 0x0f
@@ -116,24 +115,5 @@
 #define PCF85063A_TIMER_MODE_EN BIT(2)
 #define PCF85063A_TIMER_MODE_INT_EN BIT(1)
 #define PCF85063A_TIMER_MODE_INT_TI_TP BIT(0)
-
-struct pcf85063a_data
-{
-	const struct device *dev;
-	const struct device *i2c;
-};
-
-int pcf85063a_init(const struct device *dev);
-
-/*
- * Future
- *
- * int pcf85063a_osc_en(bool enabled);
- * int pcf85063a_set_timer(uint8_t seconds);
- * int pcf85063a_timer_en(bool enabled);
- */
-
-int pcf85063a_set_time(const struct device *dev, const struct tm *time);
-int pcf85063a_get_time(const struct device *dev, struct tm *time);
 
 #endif /* ZEPHYR_DRIVERS_RTC_PCF85063A_PCF85063A_H_ */

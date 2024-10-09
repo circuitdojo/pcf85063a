@@ -1,5 +1,3 @@
-# PCF85063A Nano Power Real time Clock configuration options
-
 #
 # Copyright (c) 2022 Circuit Dojo LLC
 #
@@ -8,7 +6,9 @@
 
 menuconfig PCF85063A
 	bool "PCF85063A Real Time Clock"
-	depends on I2C
-	depends on COUNTER
+	default y
+	depends on DT_HAS_NXP_PCF85063A_ENABLED
+	select I2C
+	select RTC
 	help
 	  Enable SPI/I2C-based driver for PCF85063A based RTC
