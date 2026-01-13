@@ -136,8 +136,9 @@ int pcf85063a_set_time(const struct device *dev, const struct tm *time)
 	/* Set weekdays */
 	raw_time[4] = PCF85063A_WEEKDAYS_MASK & time->tm_wday;
 
-	/*Set month */
-	raw_time[5] = PCF85063A_MONTHS_MASK & (((time->tm_mon / 10) << PCF85063A_BCD_UPPER_SHIFT) + (time->tm_mon % 10));
+	/*Set month (convert tm_mon 0-11 range to PCF85063A 1-12 range) */
+	uint8_t month = time->tm_mon + 1;
+	raw_time[5] = PCF85063A_MONTHS_MASK & (((month / 10) << PCF85063A_BCD_UPPER_SHIFT) + (month % 10));
 
 	/* Set year */
 	uint8_t year = time->tm_year % 100;
@@ -195,8 +196,8 @@ int pcf85063a_get_time(const struct device *dev, struct tm *time)
 	/* Get weekdays */
 	time->tm_wday = (raw_time[4] & PCF85063A_BCD_LOWER_MASK) + (((raw_time[4] & PCF85063A_BCD_UPPER_MASK) >> PCF85063A_BCD_UPPER_SHIFT) * 10);
 
-	/* Get month */
-	time->tm_mon = (raw_time[5] & PCF85063A_BCD_LOWER_MASK) + (((raw_time[5] & PCF85063A_BCD_UPPER_MASK) >> PCF85063A_BCD_UPPER_SHIFT) * 10);
+	/* Get month (convert PCF85063A 1-12 range to tm_mon 0-11 range) */
+	time->tm_mon = (raw_time[5] & PCF85063A_BCD_LOWER_MASK) + (((raw_time[5] & PCF85063A_BCD_UPPER_MASK) >> PCF85063A_BCD_UPPER_SHIFT) * 10) - 1;
 
 	/* Get year with offset of 100 since we're in 2000+ */
 	time->tm_year = (raw_time[6] & PCF85063A_BCD_LOWER_MASK) + (((raw_time[6] & PCF85063A_BCD_UPPER_MASK) >> PCF85063A_BCD_UPPER_SHIFT) * 10) + 100;
